@@ -13,7 +13,7 @@ model User {
   updatedAt DateTime  @updatedAt
   email     String    @unique
   password  String
-  nickname  String?
+  nickname  String?   @default("匿名")
   comment   Comment[]
   todo      Todo[]
 }
@@ -24,11 +24,11 @@ model Todo {
   updatedAt  DateTime  @updatedAt
   todo_due   DateTime?
   user_id    Int
-  manager_id Int?
+  assign_id  Int?      @default(0)
   title      String
-  content    String?
-  image_url  String?
-  status     String
+  content    String?   @default("")
+  image_url  String?   @default("")
+  is_completed     Boolean    @default(false)
   user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   comment    Comment[]
 }

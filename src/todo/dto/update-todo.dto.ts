@@ -1,6 +1,9 @@
-import {IsDate, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
+import {IsNotEmpty, IsOptional, IsString} from "class-validator";
 
 export class UpdateTodoDto {
+
+    @IsNotEmpty()
+    todo_id: number;
 
     @IsString()
     title?: string;
@@ -11,8 +14,10 @@ export class UpdateTodoDto {
     @IsString()
     image_url?: string;
 
-    @IsString()
-    status?: string;
+    is_completed: boolean;
+
+    @IsOptional()
+    assign_id?: number
 
     todo_due?: Date;
 }

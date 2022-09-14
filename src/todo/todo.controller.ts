@@ -2,14 +2,31 @@ import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuar
 import {AuthGuard} from "@nestjs/passport";
 import {TodoService} from "./todo.service";
 import {CreateTodoDto} from "./dto/create-todo.dto";
-import {Todo, Comment} from "@prisma/client";
+import {Comment, Todo} from "@prisma/client";
 import {UpdateTodoDto} from "./dto/update-todo.dto";
+import {DeleteTodoDto} from "./dto/delete-todo.dto";
 
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('todos')
 export class TodoController {
-    constructor(private readonly todoService: TodoService) {}
+    constructor(private readonly todoService: TodoService) {
+    }
+
+    @Get("over-due")
+    findTodoOverdue(): Promise<Todo[]> {
+        return this.todoService.findTodoOverdue();
+    }
+
+    @Get("/completion")
+    findCompletionTodo() {
+        return this.todoService.findCompletionTodo();
+    }
+
+    @Get("/incomplete")
+    findInCompleteTodo() {
+        return this.todoService.findInCompleteTodo();
+    }
 
     @Get()
     getTodoList(): Promise<Todo[]> {
@@ -21,29 +38,30 @@ export class TodoController {
         return this.todoService.findTodo(todo_id);
     }
 
+    @Get(":assigner_id/assigners")
+    findTodoManager(@Param("assigner_id", ParseIntPipe) assigner_id: number): Promise<Todo[]> {
+        return this.todoService.findTodoAssigner(assigner_id);
+    }
+
     @Get(':todo_id/comments')
     findTodoComments(
         @Param('todo_id', ParseIntPipe) todo_id: number): Promise<Comment[]> {
         return this.todoService.findTodoComments(todo_id)
     }
 
-    @Post(":id")
+    @Post()
     createTodo(
-        @Body() dto: CreateTodoDto,
-        @Param("id", ParseIntPipe) user_id: number): Promise<Todo> {
-        return this.todoService.createTodo(user_id, dto)
+        @Body() dto: CreateTodoDto): Promise<Todo | String> {
+        return this.todoService.createTodo(dto)
     }
 
-    @Patch(':id')
-    updateTodo(
-        @Body() dto: UpdateTodoDto,
-        @Param("id", ParseIntPipe) todo_id: number): Promise<Todo> {
-        return this.todoService.updateTodo(todo_id, dto);
+    @Patch()
+    updateTodo(@Body() dto: UpdateTodoDto): Promise<Todo> {
+        return this.todoService.updateTodo(dto);
     }
 
-    @Delete(':id')
-    deleteTodo(
-        @Param("id", ParseIntPipe) todo_id: number): Promise<void> {
-        return this.todoService.deleteTodo(todo_id);
+    @Delete()
+    deleteTodo(@Body() dto: DeleteTodoDto): Promise<void> {
+        return this.todoService.deleteTodo(dto);
     }
 }

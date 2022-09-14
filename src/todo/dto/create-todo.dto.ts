@@ -1,21 +1,24 @@
-import {IsDate, IsNotEmpty, IsNumber, IsOptional, IsString} from "class-validator";
+import {IsNotEmpty, IsOptional, IsString} from "class-validator";
 
 export class CreateTodoDto {
+
+    @IsNotEmpty()
+    user_id: number;
 
     @IsNotEmpty()
     @IsString()
     title: string;
 
-    @IsString()
     content?: string;
 
-    @IsString()
     image_url?: string;
 
-    @IsNotEmpty()
-    @IsString()
-    status: string;
+    @IsOptional()
+    assign_id?: number;
 
     @IsNotEmpty()
     todo_due: Date;
+
+    is_completed: boolean;
+
 }

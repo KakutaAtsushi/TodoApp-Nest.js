@@ -1,10 +1,12 @@
-import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards} from '@nestjs/common';
 import {CreateCommentDto} from "./dto/create-comment.dto";
 import {CommentService} from "./comment.service";
 import {UpdateCommentDto} from "./dto/update-comment.dto";
 import {Comment} from '@prisma/client'
+import {DeleteCommentDto} from "./dto/delete-comment.dto";
+import {AuthGuard} from "@nestjs/passport";
 
-
+@UseGuards(AuthGuard("jwt"))
 @Controller('comments')
 export class CommentController {
     constructor(private readonly CommentService: CommentService) {
@@ -20,24 +22,20 @@ export class CommentController {
         return this.CommentService.findComment(comment_id);
     }
 
-    @Post(":user_id/:todo_id")
+    @Post()
     createComment(
-        @Body() dto: CreateCommentDto,
-        @Param('user_id', ParseIntPipe) user_id: number,
-        @Param("todo_id", ParseIntPipe) todo_id: number,): Promise<CreateCommentDto> {
-        return this.CommentService.createComment(user_id, todo_id, dto)
+        @Body() dto: CreateCommentDto): Promise<CreateCommentDto> {
+        return this.CommentService.createComment(dto)
     }
 
-    @Patch(":id")
+    @Patch()
     updateComment(
-        @Body() dto: UpdateCommentDto,
-        @Param('id', ParseIntPipe) comment_id: number): Promise<UpdateCommentDto> {
-        return this.CommentService.updateComment(comment_id, dto)
+        @Body() dto: UpdateCommentDto): Promise<Comment> {
+        return this.CommentService.updateComment(dto)
     }
 
-    @Delete(":id")
-    deleteComment(
-        @Param('id', ParseIntPipe) comment_id: number): Promise<void> {
-        return this.CommentService.deleteComment(comment_id)
+    @Delete()
+    deleteComment(@Body() dto: DeleteCommentDto): Promise<void> {
+        return this.CommentService.deleteComment(dto)
     }
 }

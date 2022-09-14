@@ -1,7 +1,8 @@
-import {Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {PrismaService} from "../prisma/prisma.service";
-import {User, Todo, Comment} from '@prisma/client'
+import {Comment, Todo, User} from '@prisma/client'
 import {UpdateUserDto} from "./dto/update-user.dto";
+import {DeleteUserDto} from "./dto/delete-user.dto";
 
 
 @Injectable()
@@ -12,12 +13,10 @@ export class UserService {
     async getUserList(): Promise<Omit<User[], 'password'>> {
         const userList = []
         const users = await this.prisma.user.findMany();
-
         await users.forEach(function (user) {
             delete user.password
             userList.push(user)
         })
-
         return userList
     }
 
@@ -45,25 +44,53 @@ export class UserService {
         })
     }
 
-    async updateUser(user_id: number, UserDto: UpdateUserDto): Promise<Omit<User, 'password'>> {
-        const user = await this.prisma.user.update({
+    async updateUser(dto: UpdateUserDto): Promise<Omit<User, 'password'>> {
+        const user_id = Number(dto.id);
+        if (!await this.isExistsUser(user_id)) {
+            throw new HttpException(
+                {
+                    status: HttpStatus.NOT_FOUND,
+                    error: `Missing user(id: ${user_id}).`,
+                },
+                404,
+            );
+        }
+        const users = await this.prisma.user.update({
             where: {
                 id: user_id
             },
             data: {
-                email: UserDto.email,
-                nickname: UserDto.nickname,
+                email: dto.email,
+                nickname: dto.nickname,
             }
         })
-        delete user.password
-        return user
+        delete users.password
+        return users
     }
 
-    async deleteUser(user_id: number): Promise<void> {
+    async deleteUser(dto: DeleteUserDto): Promise<void> {
+        const user_id = Number(dto.id)
+        if (!await this.isExistsUser(user_id)) {
+            throw new HttpException(
+                {
+                    status: HttpStatus.NOT_FOUND,
+                    error: `Missing user(id: ${user_id}).`,
+                },
+                404,
+            );
+        }
         await this.prisma.user.delete({
             where: {
                 id: user_id
             }
         })
+    }
+
+    isExistsUser(user_id: number): Promise<User> {
+        return this.prisma.user.findUnique({
+            where: {
+                id: user_id
+            }
+        });
     }
 }

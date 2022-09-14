@@ -1,8 +1,9 @@
 import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, UseGuards} from '@nestjs/common';
 import {AuthGuard} from "@nestjs/passport";
 import {UserService} from "./user.service";
-import {Todo, Comment, User} from "@prisma/client";
+import {Comment, Todo, User} from "@prisma/client";
 import {UpdateUserDto} from "./dto/update-user.dto";
+import {DeleteUserDto} from "./dto/delete-user.dto";
 
 
 @UseGuards(AuthGuard('jwt'))
@@ -21,26 +22,24 @@ export class UserController {
         return this.userService.findUser(user_id);
     }
 
-    @Get(':user_id/todo')
+    @Get(':user_id/todos')
     findUserTodoList(@Param("user_id", ParseIntPipe) user_id: number): Promise<Todo[]> {
         return this.userService.findUserTodoList(user_id);
     }
 
-    @Get(':user_id/comment')
+    @Get(':user_id/comments')
     findUserCommentList(@Param('user_id', ParseIntPipe) user_id: number): Promise<Comment[]> {
         return this.userService.findUserCommentList(user_id);
     }
 
-    @Patch(':user_id')
+    @Patch()
     updateUser(
-        @Body() updateUserDto: UpdateUserDto,
-        @Param("user_id", ParseIntPipe) user_id: number): Promise<UpdateUserDto> {
-        return this.userService.updateUser(user_id, updateUserDto);
+        @Body() dto: UpdateUserDto): Promise<UpdateUserDto> {
+        return this.userService.updateUser(dto);
     }
 
-    @Delete(':user_id')
-    deletedUser(
-        @Param("user_id", ParseIntPipe) user_id: number): Promise<void> {
-        return this.userService.deleteUser(user_id);
+    @Delete()
+    deletedUser(@Body() dto: DeleteUserDto): Promise<void> {
+        return this.userService.deleteUser(dto);
     }
 }
