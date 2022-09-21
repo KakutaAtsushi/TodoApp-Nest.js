@@ -1,9 +1,9 @@
-import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
-import {Comment, Todo} from '@prisma/client'
-import {PrismaService} from "../prisma/prisma.service";
-import {CreateTodoDto} from "./dto/create-todo.dto";
-import {UpdateTodoDto} from "./dto/update-todo.dto";
-import {type} from "os";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { Comment, Todo } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateTodoDto } from "./dto/create-todo.dto";
+import { UpdateTodoDto } from "./dto/update-todo.dto";
+import { DeleteTodoDto } from "./dto/delete-todo.dto";
 
 @Injectable()
 export class TodoService {
@@ -141,9 +141,8 @@ export class TodoService {
     async updateTodo(dto: UpdateTodoDto): Promise<Todo> {
         const sendMail = require('sendmail')();
         dto.assign_id = Number(dto.assign_id);
-        dto.is_completed = dto.is_completed;
-        Logger.debug(dto);
         const todo_id = Number(dto.todo_id);
+        dto.is_completed = Boolean(dto.is_completed)
         delete dto.todo_id
 
         let todoDetail = {
@@ -154,9 +153,11 @@ export class TodoService {
             }),
             updatedTodoDetail: dto,
         };
+
         const isExists = await this.prisma.user.findUnique({
             where: {id: dto.assign_id}
-        })
+        });
+
         if (!isExists) {
             throw new HttpException(
                 {
@@ -178,6 +179,7 @@ export class TodoService {
                 },
             }),
         };
+
         const updatedTodo = await this.prisma.todo.update({
             where: {
                 id: todo_id
@@ -194,17 +196,17 @@ export class TodoService {
         return updatedTodo;
     }
 
-    async deleteTodo(dto: UpdateTodoDto): Promise<void> {
+    async deleteTodo(dto: DeleteTodoDto): Promise<void> {
         const todo_id = Number(dto.todo_id);
         const isExists = await this.prisma.todo.findUnique({
             where: {
-                id: todo_id,
+                id: todo_id
             }
-        })
+        });
         if (!isExists) {
             throw new HttpException(
-                {
-                    status: HttpStatus.NOT_FOUND,
+              {
+                  status: HttpStatus.NOT_FOUND,
                     error: `Missing todo(id: ${todo_id}).`,
                 },
                 404,
@@ -232,5 +234,4 @@ export class TodoService {
             console.dir(reply);
         });
     }
-
 }

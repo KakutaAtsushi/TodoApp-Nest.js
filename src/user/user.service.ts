@@ -1,8 +1,8 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {PrismaService} from "../prisma/prisma.service";
-import {Comment, Todo, User} from '@prisma/client'
-import {UpdateUserDto} from "./dto/update-user.dto";
-import {DeleteUserDto} from "./dto/delete-user.dto";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { Comment, Todo, User } from "@prisma/client";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { DeleteUserDto } from "./dto/delete-user.dto";
 
 
 @Injectable()
@@ -10,24 +10,42 @@ export class UserService {
     constructor(private prisma: PrismaService) {
     }
 
-    async getUserList(): Promise<Omit<User[], 'password'>> {
-        const userList = []
+    async getUserList(): Promise<Omit<User[], "password">> {
+        const userList = [];
         const users = await this.prisma.user.findMany();
-        await users.forEach(function (user) {
-            delete user.password
-            userList.push(user)
-        })
-        return userList
+        if(!users) {
+            throw new HttpException(
+              {
+                  status: HttpStatus.NOT_FOUND,
+                  error: `Missing user data.`,
+              },
+              404,
+            );
+        }
+        await users.forEach(function(user) {
+            delete user.password;
+            userList.push(user);
+        });
+        return userList;
     }
 
     async findUser(user_id: number): Promise<Omit<User, "password">> {
+        if(!await this.isExistsUser(user_id)){
+            throw new HttpException(
+              {
+                  status: HttpStatus.NOT_FOUND,
+                  error: `Missing user(id: ${user_id}).`,
+              },
+              404,
+            );
+        }
         const user = await this.prisma.user.findUnique({
             where: {
                 id: user_id
             }
-        })
-        delete user.password
-        return user
+        });
+        delete user.password;
+        return user;
     }
 
     async findUserTodoList(user_id: number): Promise<Todo[]> {
